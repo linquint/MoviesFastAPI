@@ -1,0 +1,6 @@
+main.py
+setup.py
+MoviesFastAPI.egg-info/PKG-INFO
+MoviesFastAPI.egg-info/SOURCES.txt
+MoviesFastAPI.egg-info/dependency_links.txt
+MoviesFastAPI.egg-info/top_level.txt
