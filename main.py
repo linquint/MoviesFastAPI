@@ -1,17 +1,17 @@
 import json
 import re
-import uvicorn
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from controller.home import movie_search, landing_keywords
-from controller.movies import movie_details, movie_reviews, get_top_movies, get_movie_by_imdb_id
+from controller.movies import movie_details, movie_reviews, get_top_movies, get_movie_by_imdb_id, \
+    get_movies_from_keywords
 from models.database import engine
 from models.model import metadata_obj
 import nltk
 
-from services.db import get_random_movies
+from services.db import get_random_movies, get_random_keywords, get_keywords_ilike
 from static.vectors import init_vectors
 from static.words import init_word_lists
 
@@ -32,10 +32,6 @@ app.add_middleware(
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
-
-
-def run_server():
-    uvicorn.run(app)
 
 
 @app.on_event("startup")
@@ -69,6 +65,7 @@ async def search_movie(q: str = Query(None), p: int = Query(1)):
         return {"response": [], "page": 0, "totalResults": 0}
     if type(p) != "number" or p > 100:
         p = 1
+    q = q.replace(' ', '%20')
     data = await movie_search(q, p)
     if data:
         return {"q": q, "page": p, "totalResults": data["count"], "response": json.loads(data["search"])}
@@ -98,7 +95,21 @@ async def get_landing_page():
     return {"keywords": keywords, "movies": movies}
 
 
+@app.get("/api/keywords/autocomplete")
+async def get_keywords_autocomplete(query: str = Query('')):
+    if query == '':
+        return {"response": get_random_keywords(20), "count": 20}
+    data = get_keywords_ilike(query)
+    count = len(data)
+    return {"response": data, "count": count}
+
+
 @app.get("/api/keywords")
-async def get_movies_by_keywords(list: str = Query('')):
-    if list == '':
+async def get_movies_by_keywords(f: str = Query('or'), keywords: str = Query('')):
+    if f != 'or' and f != 'and':
+        func = 'or'
+    else:
+        func = f
+    if keywords == '':
         return {"response": False}
+    return {"response": get_movies_from_keywords(keywords, func)}

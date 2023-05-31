@@ -46,6 +46,10 @@ def get_random_movies(count):
     return sql.query(Movie).order_by(func.random()).limit(count).all()
 
 
+def get_keywords_ilike(string: str):
+    return sql.query(Keyword).filter(func.lower(Keyword.word).contains(string.lower())).all()
+
+
 def get_top_keywords():
     results = sql.execute(text("""
         SELECT k.word, COUNT(*) AS occ 
@@ -56,6 +60,22 @@ def get_top_keywords():
         LIMIT 20
     """))
     return json.dumps([{"word": row[0], "count": row[1]} for row in results.fetchall()])
+
+
+def get_movies_by_keywords_array(kws: list, f: str, count: int):
+    if f == 'and':
+        return sql.query(Keyword)\
+            .join(Keyword.movies)\
+            .filter(Keyword.word.in_(kws))\
+            .group_by(Movie.id)\
+            .having(func.count(Keyword.word) == count) \
+            .options(
+                joinedload(Keyword.movies)
+            ).all()
+    else:
+        return sql.query(Keyword).options(
+            joinedload(Keyword.movies)
+        ).filter(Keyword.word.in_(kws)).all()
 
 
 def get_movie_data_by_imdb_id(imdbid):

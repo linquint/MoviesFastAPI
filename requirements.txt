@@ -6,3 +6,5 @@ nltk~=3.8.1
 pandas~=2.0.1
 scikit-learn~=1.2.2
 networkx~=3.1
+pymysql~=1.0.3
+uvicorn[standard]==0.22.0
