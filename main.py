@@ -47,16 +47,16 @@ async def init_db():
     nltk.download('punkt')
     nltk.download('stopwords')
 
-    print("Initializing Top movies")
-    movies_res = await get_top_movies()
-    movies = json.loads(movies_res.decode("utf-8"))['results']
-    for movie in movies:
-        imdb = re.findall("tt\d{7,8}", movie['url'])[0]
-        if get_movie_by_imdb_id(imdb) is None:
-            print(f"Adding {imdb}")
-            await get_movie(imdb)
-            await movie_reviews(imdb)
-    print("Finished initializing top movies")
+    # print("Initializing Top movies")
+    # movies_res = await get_top_movies()
+    # movies = json.loads(movies_res.decode("utf-8"))['results']
+    # for movie in movies:
+    #     imdb = re.findall("tt\d{7,8}", movie['url'])[0]
+    #     if get_movie_by_imdb_id(imdb) is None:
+    #         print(f"Adding {imdb}")
+    #         await get_movie(imdb)
+    #         await movie_reviews(imdb)
+    # print("Finished initializing top movies")
 
 
 @app.get("/api/search")

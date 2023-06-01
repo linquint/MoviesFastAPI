@@ -11,6 +11,7 @@ import networkx as nx
 
 from services.db import get_movie_by_imdb_id, insert_movie, get_reviews_by_imdb_id, insert_reviews_summary, \
     get_movie_data_by_imdb_id, get_movies_by_keywords_array
+from services.scraper import scrape
 from static.vectors import vectors
 from static.words import stopwords, adjectives
 
@@ -40,14 +41,9 @@ async def movie_details(imdb_id):
 async def movie_reviews(imdb_id, retry=0):
     reviews = get_reviews_by_imdb_id(imdb_id)
     if reviews is None or len(reviews) < 15:
-        conn_dojo = http.client.HTTPSConnection("online-movie-database.p.rapidapi.com")
-        conn_dojo.request("GET", f"/title/get-user-reviews?tconst={imdb_id}", headers=headersDOJO)
-        res_dojo = conn_dojo.getresponse()
-        data = res_dojo.read()
-        conn_dojo.close()
-        objs = json.loads(data.decode('utf-8'))
-        reviews_list = [r['reviewText'] for r in objs['reviews']]
-        if len(reviews_list) < 10:
+        objs = json.loads(scrape(imdb_id))
+        reviews_list = [r['content'] for r in objs]
+        if len(reviews_list) == 0:
             if retry < 3:
                 return await movie_reviews(imdb_id, retry + 1)
             else:
@@ -55,12 +51,7 @@ async def movie_reviews(imdb_id, retry=0):
         else:
             keywords = retrieve_keywords(reviews_list)
             summary = retrieve_summary(reviews_list)
-            summary_clean_text = [review['reviewText'] for review in objs['reviews'] if not review['spoiler']]
-            if len(summary_clean_text) > 100:
-                summary_clean = retrieve_summary()
-                insert_reviews_summary(imdb_id, objs, keywords, summary, summary_clean)
-            else:
-                insert_reviews_summary(imdb_id, objs, keywords, summary)
+            insert_reviews_summary(imdb_id, objs, keywords, summary)
     return get_movie_data_by_imdb_id(imdb_id)
 
 

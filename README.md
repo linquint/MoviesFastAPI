@@ -23,4 +23,4 @@ You can use ``--host 0.0.0.0`` in order to listen to all the IPs on the server.
 gunicorn main:app --workers 2 --workers-class uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --timeout 0 --daemon
 ````
 
-You can change the worker count, however, keep in mind that each worker loads the word vector file into RAM.
+You can change the worker count, however, keep in mind that each worker loads the word vector file into RAM (approx. 150MB per worker).

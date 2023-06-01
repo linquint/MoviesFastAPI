@@ -138,10 +138,10 @@ def does_keyword_exist(kw):
     return sql.query(Keyword).filter(Keyword.word == kw).first()
 
 
-def insert_reviews_summary(imdb_id, objs, keywords, summary_spoilers, summary_clean=None):
+def insert_reviews_summary(imdb_id, objs, keywords, summary_text):
     movie = sql.query(Movie).filter(Movie.imdbID == imdb_id).one()
 
-    summary = Summary(contentClean=summary_clean, contentSpoilers=summary_spoilers)
+    summary = Summary(contentClean=summary_text)
     sql.add(summary)
     movie.summary = summary
 
@@ -152,17 +152,17 @@ def insert_reviews_summary(imdb_id, objs, keywords, summary_spoilers, summary_cl
             sql.add(kw)
         movie.keywords.append(kw)
 
-    for obj in objs['reviews']:
+    for obj in objs:
         review = Review(
-            author=obj['author']['displayName'],
-            rating=get_value(obj, "authorRating", "int", 0),
-            helpfulness=get_value(obj, "helpfulnessScore", "float"),
-            upvotes=get_value(obj['interestingVotes'], "up", "int", 0),
-            downvotes=get_value(obj['interestingVotes'], "down", "int", 0),
-            title=get_value(obj, "reviewTitle"),
-            content=get_value(obj, "reviewText"),
-            spoilers=get_value(obj, "spoiler", "bool", False),
-            submittedOn=get_value(obj, "submissionDate"),
+            author=get_value(obj, 'author'),
+            rating=get_value(obj, "rating", "int", 0),
+            helpfulness=get_value(obj, "helpfulness", "float"),
+            upvotes=get_value(obj, "upvotes", "int", 0),
+            downvotes=get_value(obj, "downvotes", "int", 0),
+            title=get_value(obj, "title"),
+            content=get_value(obj, "content"),
+            spoilers=get_value(obj, "spoilers", "bool", False),
+            submittedOn=get_value(obj, "submittedOn"),
             imdbID=imdb_id
         )
         sql.add(review)
