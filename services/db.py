@@ -6,6 +6,8 @@ from sqlalchemy.orm import joinedload
 from models.database import sql
 from models.model import Movie, Actor, Genre, Director, Review, Summary, Keyword
 
+from datetime import datetime
+
 
 def remove_non_ascii(s):
     return "".join(c for c in s if ord(c) < 128)
@@ -139,7 +141,7 @@ def does_keyword_exist(kw):
 
 
 def insert_reviews_summary(imdb_id, objs, keywords, summary_text):
-    movie = sql.query(Movie).filter(Movie.imdbID == imdb_id).one()
+    movie = sql.query(Movie).filter(Movie.imdbID == imdb_id).first()
 
     summary = Summary(contentClean=summary_text)
     sql.add(summary)
@@ -155,14 +157,14 @@ def insert_reviews_summary(imdb_id, objs, keywords, summary_text):
     for obj in objs:
         review = Review(
             author=get_value(obj, 'author'),
-            rating=get_value(obj, "rating", "int", 0),
-            helpfulness=get_value(obj, "helpfulness", "float"),
-            upvotes=get_value(obj, "upvotes", "int", 0),
-            downvotes=get_value(obj, "downvotes", "int", 0),
+            rating=obj['rating'],
+            helpfulness=obj['helpfulness'],
+            upvotes=obj['upvotes'],
+            downvotes=obj['downvotes'],
             title=get_value(obj, "title"),
             content=get_value(obj, "content"),
-            spoilers=get_value(obj, "spoilers", "bool", False),
-            submittedOn=get_value(obj, "submittedOn"),
+            spoilers=obj['spoilers'],
+            submittedOn=datetime.strptime(obj['submittedOn'], "%d %B %Y"),
             imdbID=imdb_id
         )
         sql.add(review)
