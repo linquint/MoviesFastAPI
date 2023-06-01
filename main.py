@@ -56,7 +56,9 @@ async def init_db():
             print(f"Adding {imdb}")
             await get_movie(imdb)
             await movie_reviews(imdb)
-    print("Finished initializing top movies")
+    print("Initializing Most Popular movies")
+    # IMDB chart ID: moviemeter
+    print("Finished initializing movies")
 
 
 @app.get("/api/search")
