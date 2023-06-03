@@ -64,23 +64,18 @@ def get_top_keywords():
     return json.dumps([{"word": row[0], "count": row[1]} for row in results.fetchall()])
 
 
-def get_movies_by_keywords_array(kws: list, f: str, count: int):
-    if f == 'and':
-        return sql.query(Keyword)\
-            .join(Keyword.movies)\
-            .filter(Keyword.word.in_(kws))\
-            .group_by(Movie.id)\
-            .having(func.count(Keyword.word) == count) \
-            .options(
-                joinedload(Keyword.movies)
-            ).all()
-    else:
-        return sql.query(Keyword).options(
-            joinedload(Keyword.movies)
-        ).filter(Keyword.word.in_(kws)).all()
+def get_movies_by_keywords(kws_str: str):
+    kws = kws_str.split(',')
+    count = len(kws)
+
+    return sql.query(Movie) \
+        .join(Movie.keywords) \
+        .filter(Keyword.word.in_(kws)) \
+        .group_by(Movie.id) \
+        .having(func.count(Keyword.word) == count).all()
 
 
-def get_movie_data_by_imdb_id(imdbid):
+def get_movie_data_by_imdb_id(imdbid: str):
     return sql.query(Movie).options(
         joinedload(Movie.actors),
         joinedload(Movie.directors),

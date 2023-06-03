@@ -1,1 +1,3 @@
 static/glove.6B.50d.txt
+/.env
+/fastapi.log

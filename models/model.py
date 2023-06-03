@@ -1,8 +1,12 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, func, Boolean, Text, BigInteger, ForeignKey, Table
-from sqlalchemy.orm import relationship
-from models.database import Base
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional, List
 
-metadata_obj = Base.metadata
+from sqlalchemy import Column, Integer, String, Float, DateTime, func, Boolean, Text, BigInteger, ForeignKey, Table
+from sqlalchemy.orm import relationship, registry
+
+mapper_registry = registry()
+metadata_obj = mapper_registry.metadata
 
 
 movie_keyword = Table(
@@ -41,78 +45,174 @@ movie_director = Table(
 )
 
 
-class Keyword(Base):
-    __tablename__ = "keywords"
-    id = Column(BigInteger, primary_key=True, index=True)
-    word = Column(String(255), unique=True)
-    movies = relationship("Movie", secondary=movie_keyword, back_populates="keywords")
+@mapper_registry.mapped
+@dataclass
+class Keyword:
+    __table__ = Table(
+        "keywords",
+        metadata_obj,
+        Column("id", BigInteger, primary_key=True, index=True),
+        Column("word", String(255), unique=True),
+    )
+    word: str
+    __mapper_args__ = {
+        "properties": {
+            "movies": relationship("Movie", secondary=movie_keyword, back_populates="keywords")
+        }
+    }
 
 
-class Review(Base):
-    __tablename__ = "reviews"
-    id = Column(Integer, primary_key=True, index=True)
-    imdbID = Column(String(255))
-    author = Column(String(255))
-    rating = Column(Integer, nullable=True)
-    helpfulness = Column(Float)
-    upvotes = Column(Integer)
-    downvotes = Column(Integer)
-    title = Column(String(255))
-    content = Column(Text)
-    spoilers = Column(Boolean)
-    submittedOn = Column(DateTime)
-    movies = relationship("Movie", secondary=movie_review, back_populates="reviews")
+@mapper_registry.mapped
+@dataclass
+class Review:
+    __table__ = Table(
+        "reviews",
+        metadata_obj,
+        Column("id", Integer, primary_key=True, index=True),
+        Column("imdbID", String(255)),
+        Column("author", String(255)),
+        Column("rating", Integer, nullable=True),
+        Column("helpfulness", Float),
+        Column("upvotes", Integer),
+        Column("downvotes", Integer),
+        Column("title", String(255)),
+        Column("content", Text),
+        Column("spoilers", Boolean),
+        Column("submittedOn", DateTime),
+    )
+    imdbID: str
+    author: str
+    helpfulness: float
+    upvotes: int
+    downvotes: int
+    title: str
+    content: str
+    spoilers: bool
+    submittedOn: Optional[datetime] = datetime.now()
+    rating: Optional[int] = None
+    __mapper_args__ = {
+        "properties": {
+            "movies": relationship("Movie", secondary=movie_review, back_populates="reviews")
+        }
+    }
 
 
-class Summary(Base):
-    __tablename__ = "summaries"
-    id = Column(Integer, primary_key=True, index=True)
-    contentClean = Column(Text, nullable=True)
-    contentSpoilers = Column(Text)
-    movie = relationship("Movie", back_populates="summary", uselist=False)
+@mapper_registry.mapped
+@dataclass
+class Summary:
+    __table__ = Table(
+        "summaries",
+        metadata_obj,
+        Column("id", Integer, primary_key=True, index=True),
+        Column("contentClean", Text),
+    )
+    contentClean: Optional[str] = None
+    __mapper_args__ = {
+        "properties": {
+            "movie": relationship("Movie", back_populates="summary", uselist=False)
+        }
+    }
 
 
-class Actor(Base):
-    __tablename__ = "actors"
-    id = Column(Integer, primary_key=True, index=True)
-    actorName = Column(String(255))
-    movies = relationship("Movie", secondary=movie_actor, back_populates="actors")
+@mapper_registry.mapped
+@dataclass
+class Actor:
+    __table__ = Table(
+        "actors",
+        metadata_obj,
+        Column("id", Integer, primary_key=True, index=True),
+        Column("actorName", String(255)),
+    )
+    actorName: str
+    __mapper_args__ = {
+        "properties": {
+            "movies": relationship("Movie", secondary=movie_actor, back_populates="actors")
+        }
+    }
 
 
-class Genre(Base):
-    __tablename__ = "genres"
-    id = Column(Integer, primary_key=True, index=True)
-    genreName = Column(String(255))
-    movies = relationship("Movie", secondary=movie_genre, back_populates="genres")
+@mapper_registry.mapped
+@dataclass
+class Genre:
+    __table__ = Table(
+        "genres",
+        metadata_obj,
+        Column("id", Integer, primary_key=True, index=True),
+        Column("genreName", String(255)),
+    )
+    genreName: str
+    __mapper_args__ = {
+        "properties": {
+            "movies": relationship("Movie", secondary=movie_genre, back_populates="genres")
+        }
+    }
 
 
-class Director(Base):
-    __tablename__ = "directors"
-    id = Column(Integer, primary_key=True, index=True)
-    directorName = Column(String(255))
-    movies = relationship("Movie", secondary=movie_director, back_populates="directors")
+@mapper_registry.mapped
+@dataclass
+class Director:
+    __table__ = Table(
+        "directors",
+        metadata_obj,
+        Column("id", Integer, primary_key=True, index=True),
+        Column("directorName", String(255)),
+    )
+    directorName: str
+    __mapper_args__ = {
+        "properties": {
+            "movies": relationship("Movie", secondary=movie_director, back_populates="directors")
+        }
+    }
 
 
-class Movie(Base):
-    __tablename__ = "movies"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255))
-    poster = Column(String(255), nullable=True)
-    releaseYear = Column(Integer)
-    runtime = Column(Integer)
-    plot = Column(Text, nullable=True)
-    awards = Column(String(255), nullable=True)
-    ratingIMDB = Column(Float)
-    ratingRT = Column(Float, nullable=True)
-    ratingMETA = Column(Float, nullable=True)
-    imdbVotes = Column(Integer)
-    imdbID = Column(String(255))
-    type = Column(String(255))
-    addedOn = Column(DateTime, default=func.now())
-    summary_id = Column(Integer, ForeignKey("summaries.id"), nullable=True)
-    summary = relationship('Summary', back_populates="movie", uselist=False)
-    keywords = relationship("Keyword", secondary=movie_keyword, back_populates="movies")
-    reviews = relationship("Review", secondary=movie_review, back_populates="movies")
-    actors = relationship("Actor", secondary=movie_actor, back_populates="movies")
-    genres = relationship("Genre", secondary=movie_genre, back_populates="movies")
-    directors = relationship("Director", secondary=movie_director, back_populates="movies")
+@mapper_registry.mapped
+@dataclass
+class Movie:
+    __table__ = Table(
+        "movies",
+        metadata_obj,
+        Column("id", Integer, primary_key=True, index=True),
+        Column("title", String(255)),
+        Column("poster", String(255), nullable=True),
+        Column("releaseYear", Integer),
+        Column("runtime", Integer),
+        Column("plot", Text, nullable=True),
+        Column("awards", String(255), nullable=True),
+        Column("ratingIMDB", Float),
+        Column("ratingRT", Float, nullable=True),
+        Column("ratingMETA", Float, nullable=True),
+        Column("imdbVotes", Integer),
+        Column("imdbID", String(255)),
+        Column("type", String(255)),
+        Column("addedOn", DateTime, default=func.now()),
+        Column("summary_id", Integer, ForeignKey("summaries.id"), nullable=True),
+    )
+    title: str
+    releaseYear: int
+    runtime: int
+    ratingIMDB: float
+    imdbVotes: int
+    imdbID: str
+    type: str
+    addedOn: Optional[datetime] = datetime.now()
+    poster: Optional[str] = None
+    plot: Optional[str] = None
+    awards: Optional[str] = None
+    ratingRT: Optional[float] = None
+    ratingMETA: Optional[float] = None
+    summary: Optional[Summary] = field(default_factory=str)
+    keywords: List[Keyword] = field(default_factory=list)
+    reviews: List[Review] = field(default_factory=list)
+    actors: List[Actor] = field(default_factory=list)
+    genres: List[Genre] = field(default_factory=list)
+    directors: List[Director] = field(default_factory=list)
+    __mapper_args__ = {
+        "properties": {
+            "summary": relationship('Summary', back_populates="movie", uselist=False),
+            "keywords": relationship("Keyword", secondary=movie_keyword, back_populates="movies"),
+            "reviews": relationship("Review", secondary=movie_review, back_populates="movies"),
+            "actors": relationship("Actor", secondary=movie_actor, back_populates="movies"),
+            "genres": relationship("Genre", secondary=movie_genre, back_populates="movies"),
+            "directors": relationship("Director", secondary=movie_director, back_populates="movies"),
+        }
+    }

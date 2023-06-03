@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
 
 from services.db import get_movie_by_imdb_id, insert_movie, get_reviews_by_imdb_id, insert_reviews_summary, \
-    get_movie_data_by_imdb_id, get_movies_by_keywords_array
+    get_movie_data_by_imdb_id
 from services.scraper import scrape
 from static.vectors import vectors
 from static.words import stopwords, adjectives
@@ -53,12 +53,6 @@ async def movie_reviews(imdb_id, retry=0):
             summary = retrieve_summary(reviews_list)
             insert_reviews_summary(imdb_id, objs, keywords, summary)
     return get_movie_data_by_imdb_id(imdb_id)
-
-
-def get_movies_from_keywords(kws_str: str, func: str):
-    kws = kws_str.split(',')
-    count = len(kws)
-    return get_movies_by_keywords_array(kws, func, count)
 
 
 def clean_text(text):

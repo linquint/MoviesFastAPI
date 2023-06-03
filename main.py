@@ -1,17 +1,19 @@
 import json
 import re
+from functools import lru_cache
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+import config
 from controller.home import movie_search, landing_keywords
-from controller.movies import movie_details, movie_reviews, get_top_movies, get_movie_by_imdb_id, \
-    get_movies_from_keywords
+from controller.movies import movie_details, movie_reviews, get_top_movies
 from models.database import engine
 from models.model import metadata_obj
 import nltk
 
-from services.db import get_random_movies, get_random_keywords, get_keywords_ilike
+from services.db import get_random_movies, get_random_keywords, get_keywords_ilike, get_movies_by_keywords, \
+    get_movie_by_imdb_id
 from static.vectors import init_vectors
 from static.words import init_word_lists
 
@@ -29,9 +31,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["POST", "GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@lru_cache()
+def get_settings():
+    return config.Settings()
 
 
 @app.on_event("startup")
@@ -47,18 +54,22 @@ async def init_db():
     nltk.download('punkt')
     nltk.download('stopwords')
 
-    print("Initializing Top movies")
-    movies_res = await get_top_movies()
-    movies = json.loads(movies_res.decode("utf-8"))['results']
-    for movie in movies:
-        imdb = re.findall("tt\d{7,8}", movie['url'])[0]
-        if get_movie_by_imdb_id(imdb) is None:
-            print(f"Adding {imdb}")
-            await get_movie(imdb)
-            await movie_reviews(imdb)
-    print("Initializing Most Popular movies")
-    # IMDB chart ID: moviemeter
-    print("Finished initializing movies")
+    if get_settings().dev:
+        print("Development")
+    else:
+        print("Production")
+        print("Initializing Top movies")
+        movies_res = await get_top_movies()
+        movies = json.loads(movies_res.decode("utf-8"))['results']
+        for movie in movies:
+            imdb = re.findall("tt\d{7,8}", movie['url'])[0]
+            if get_movie_by_imdb_id(imdb) is None:
+                print(f"Adding {imdb}")
+                await get_movie(imdb)
+                await movie_reviews(imdb)
+        print("Initializing Most Popular movies")
+        # IMDB chart ID: moviemeter
+        print("Finished initializing movies")
 
 
 @app.get("/api/search")
@@ -107,11 +118,11 @@ async def get_keywords_autocomplete(query: str = Query('')):
 
 
 @app.get("/api/keywords")
-async def get_movies_by_keywords(f: str = Query('or'), keywords: str = Query('')):
-    if f != 'or' and f != 'and':
-        func = 'or'
-    else:
-        func = f
-    if keywords == '':
+async def get_movies_filtered_by_keyword(keywords: str = Query('')):
+    if keywords == '' or len(keywords) < 2:
         return {"response": False}
-    return {"response": get_movies_from_keywords(keywords, func)}
+    try:
+        return {"response": get_movies_by_keywords(keywords)}
+    except Exception as e:
+        print(f'Exception while getting movies by keywords. Keywords: {keywords}\nError: {e}')
+        return {"response": False}

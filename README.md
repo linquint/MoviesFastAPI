@@ -20,7 +20,11 @@ You can use ``--host 0.0.0.0`` in order to listen to all the IPs on the server.
 2. Install gunicorn. On Ubuntu you can install using apt-get: ``sudo apt-get install gunicorn``
 3. Launch the uvicorn worker using gunicorn:
 ````
-gunicorn main:app --workers 2 --workers-class uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --timeout 0 --daemon
+gunicorn main:app --workers 1 --workers-class uvicorn.workers.UvicornWorker --access-logfile [file location] 
+--bind 127.0.0.1:8000 --timeout 0 --daemon
 ````
 
 You can change the worker count, however, keep in mind that each worker loads the word vector file into RAM (approx. 150MB per worker).
+
+
+Change logfile location ``--access-logfile '-'`` to log directly to STDOUT
