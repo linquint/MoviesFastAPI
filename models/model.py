@@ -200,7 +200,7 @@ class Movie:
     awards: Optional[str] = None
     ratingRT: Optional[float] = None
     ratingMETA: Optional[float] = None
-    summary: Optional[Summary] = field(default_factory=str)
+    summary: Optional[Summary] = None
     keywords: List[Keyword] = field(default_factory=list)
     reviews: List[Review] = field(default_factory=list)
     actors: List[Actor] = field(default_factory=list)

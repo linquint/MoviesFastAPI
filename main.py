@@ -117,6 +117,7 @@ async def get_keywords_autocomplete(query: str = Query('')):
     return {"response": data, "count": count}
 
 
+# TODO: Add pagination and limit to either 12 or 24 movies per page
 @app.get("/api/keywords")
 async def get_movies_filtered_by_keyword(keywords: str = Query('')):
     if keywords == '' or len(keywords) < 2:
