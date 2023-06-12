@@ -75,7 +75,7 @@ def get_movies_by_keywords(kws_str: str, page: int):
         .group_by(Movie.id) \
         .having(func.count(Keyword.word) == count) \
         .offset(start) \
-        .limit(page * 12).all()
+        .limit(12).all()
 
 
 def get_movie_data_by_imdb_id(imdbid: str):
