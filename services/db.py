@@ -64,15 +64,18 @@ def get_top_keywords():
     return json.dumps([{"word": row[0], "count": row[1]} for row in results.fetchall()])
 
 
-def get_movies_by_keywords(kws_str: str):
+def get_movies_by_keywords(kws_str: str, page: int):
     kws = kws_str.split(',')
     count = len(kws)
+    start = (page - 1) * 12
 
     return sql.query(Movie) \
         .join(Movie.keywords) \
         .filter(Keyword.word.in_(kws)) \
         .group_by(Movie.id) \
-        .having(func.count(Keyword.word) == count).all()
+        .having(func.count(Keyword.word) == count) \
+        .offset(start) \
+        .limit(page * 12).all()
 
 
 def get_movie_data_by_imdb_id(imdbid: str):

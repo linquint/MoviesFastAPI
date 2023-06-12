@@ -67,16 +67,16 @@ async def init_db():
                 print(f"Adding {imdb}")
                 await get_movie(imdb)
                 await movie_reviews(imdb)
-        print("Initializing Most Popular movies")
+        print("Initializing currently Most Popular movies")
         # IMDB chart ID: moviemeter
         print("Finished initializing movies")
 
 
 @app.get("/api/search")
 async def search_movie(q: str = Query(None), p: int = Query(1)):
-    if type(q) is None:
+    if type(q) is None or len(q) < 3:
         return {"response": [], "page": 0, "totalResults": 0}
-    if type(p) != "number" or p > 100:
+    if p > 100:
         p = 1
     q = q.replace(' ', '%20')
     data = await movie_search(q, p)
@@ -119,11 +119,11 @@ async def get_keywords_autocomplete(query: str = Query('')):
 
 # TODO: Add pagination and limit to either 12 or 24 movies per page
 @app.get("/api/keywords")
-async def get_movies_filtered_by_keyword(keywords: str = Query('')):
+async def get_movies_filtered_by_keyword(keywords: str = Query(''), p: int = Query(1)):
     if keywords == '' or len(keywords) < 2:
         return {"response": False}
     try:
-        return {"response": get_movies_by_keywords(keywords)}
+        return {"response": get_movies_by_keywords(keywords, p)}
     except Exception as e:
         print(f'Exception while getting movies by keywords. Keywords: {keywords}\nError: {e}')
         return {"response": False}

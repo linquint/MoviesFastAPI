@@ -55,8 +55,6 @@ beloved
 best
 better
 bewitched
-big
-big-hearted
 black-and-white
 bland
 blank
@@ -214,7 +212,6 @@ failing
 faithful
 fake
 FALSE
-familiar
 famous
 fancy
 fantastic
@@ -260,7 +257,6 @@ funny
 fuzzy
 gargantuan
 general
-gentle
 genuine
 giddy
 giving
@@ -305,7 +301,6 @@ hidden
 hideous
 hilarious
 hollow
-honest
 honorable
 honored
 hopeful
@@ -315,7 +310,6 @@ humble
 humiliating
 hurtful
 icky
-ideal
 idealistic
 idiotic
 idolized
@@ -330,7 +324,6 @@ impeccable
 imperfect
 imperturbable
 impolite
-important
 impressive
 improbable
 incomparable
@@ -338,7 +331,6 @@ incomplete
 incredible
 infamous
 inferior
-innocent
 insecure
 insidious
 intelligent
@@ -378,14 +370,12 @@ luminous
 lumpy
 lustrous
 luxurious
-mad
 made-up
 magnificent
 majestic
 marvelous
 masculine
 mature
-mean
 mediocre
 medium
 mellow
@@ -414,7 +404,6 @@ negative
 neglected
 negligible
 nervous
-new
 nice
 nifty
 nimble
@@ -454,9 +443,6 @@ positive
 powerful
 powerless
 precious
-present
-prestigious
-pretty
 prickly
 prime
 pristine
@@ -476,7 +462,6 @@ quizzical
 radiant
 rapid
 rare
-real
 realistic
 reasonable
 reckless
@@ -513,7 +498,6 @@ scornful
 scratchy
 scrawny
 secret
-selfish
 sentimental
 serene
 serious
@@ -524,7 +508,6 @@ shady
 shallow
 shameful
 shameless
-sharp
 shimmering
 shiny
 shocked
@@ -580,7 +563,6 @@ strict
 strident
 striking
 striped
-strong
 studious
 stunning
 stupendous
@@ -654,7 +636,6 @@ unimportant
 unique
 united
 unkempt
-unknown
 unlucky
 unnatural
 unpleasant
@@ -704,7 +685,6 @@ warped
 wary
 watchful
 wavy
-weak
 webbed
 wee
 weepy
@@ -741,10 +721,7 @@ worthy
 wrathful
 wretched
 writhing
-wrong
 wry
-young
-youthful
 zany
 zealous
 zesty
