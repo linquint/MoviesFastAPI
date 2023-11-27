@@ -1,3 +1,6 @@
 static/glove.6B.50d.txt
 /.env
 /fastapi.log
+__pycache__/
+.idea/
+venv/

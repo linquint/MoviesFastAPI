@@ -1,13 +1,19 @@
 import json
+import logging
 import re
 from functools import lru_cache
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 import config
+from controller.auth import add_user, authenticate_user, get_password_hash, is_valid_username
 from controller.home import movie_search, landing_keywords
 from controller.movies import movie_details, movie_reviews, get_top_movies
+from interfaces.auth import LoginReq
 from models.database import engine
 from models.model import metadata_obj
 import nltk
@@ -17,14 +23,35 @@ from services.db import get_random_movies, get_random_keywords, get_keywords_ili
 from static.vectors import init_vectors
 from static.words import init_word_lists
 
+sentry_sdk.init(
+    dsn="https://c32658a30102994242ba8b2ce119e541@o1136798.ingest.sentry.io/4506101713731584",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+    integrations=[
+      LoggingIntegration(
+        level=logging.INFO,
+        event_level=logging.ERROR
+      )
+    ]
+)
+
 app = FastAPI()
+
+SECRET_KEY = "your-secret-key"
+ALGORITHM = "HS256"
 
 origins = [
     "http://localhost",
     "http://localhost:5173",
     "https://linquint.dev",
     "http://192.168.1.237:5173",
-    "https://reviews.linquint.dev",
+    "https://movies.linquint.dev",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -34,7 +61,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @lru_cache()
 def get_settings():
@@ -59,15 +85,15 @@ async def init_db():
     else:
         print("Production")
         print("Initializing Top movies")
-        movies_res = await get_top_movies()
-        movies = json.loads(movies_res.decode("utf-8"))['results']
-        for movie in movies:
-            imdb = re.findall("tt\d{7,8}", movie['url'])[0]
-            if get_movie_by_imdb_id(imdb) is None:
-                print(f"Adding {imdb}")
-                await get_movie(imdb)
-                await movie_reviews(imdb)
-        print("Initializing currently Most Popular movies")
+        # movies_res = await get_top_movies()
+        # movies = json.loads(movies_res.decode("utf-8"))['results']
+        # for movie in movies:
+        #     imdb = re.findall("tt\d{7,8}", movie['url'])[0]
+        #     if get_movie_by_imdb_id(imdb) is None:
+        #         print(f"Adding {imdb}")
+        #         await get_movie(imdb)
+        #         await movie_reviews(imdb)
+        # print("Initializing currently Most Popular movies")
         # IMDB chart ID: moviemeter
         print("Finished initializing movies")
 
@@ -127,3 +153,29 @@ async def get_movies_filtered_by_keyword(keywords: str = Query(''), p: int = Que
     except Exception as e:
         print(f'Exception while getting movies by keywords. Keywords: {keywords}\nError: {e}')
         return {"response": False}
+
+
+@app.post("/api/register", response_model=dict)
+async def register_user(req: LoginReq):
+  if not req.username or not req.password:
+    logging.info(f"Register missing username or password.")
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Missing username or password."
+    )
+  add_user(req.username, req.password)
+  logging.info(f"User {req.username} created successfully.")
+  return {"response": "User created successfully."}
+
+
+@app.post("/api/login")
+async def login_user(req: OAuth2PasswordRequestForm = Depends()):
+  if not req.username or not req.password:
+    logging.info(f"Login missing username or password.")
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Missing username or password."
+    )
+  token = authenticate_user(req.username, req.password)
+  logging.info(f"User {req.username} logged in successfully.")
+  return token

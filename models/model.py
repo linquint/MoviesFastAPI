@@ -47,6 +47,21 @@ movie_director = Table(
 
 @mapper_registry.mapped
 @dataclass
+class User:
+  __table__ = Table(
+    "users",
+    metadata_obj,
+    Column("id", Integer, primary_key=True, index=True),
+    Column("username", String(32), unique=True),
+    Column("password", String(256)),
+  )
+  id: int
+  username: str
+  password: str
+
+
+@mapper_registry.mapped
+@dataclass
 class Keyword:
     __table__ = Table(
         "keywords",

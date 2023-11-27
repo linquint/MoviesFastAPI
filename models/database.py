@@ -19,7 +19,7 @@ def get_password():
     return get_settings().db_prod
 
 
-DATABASE_URL = f"mysql+pymysql://root:{get_password()}@localhost:3306/movies"
+DATABASE_URL = f"mysql+pymysql://rokas:{get_password()}@localhost:3306/movies"
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 sql = SessionLocal()
