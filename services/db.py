@@ -1,10 +1,12 @@
 import json
+from fastapi import HTTPException, status
 
 from sqlalchemy import func, text
 from sqlalchemy.orm import joinedload
+from main import like_movie
 
 from models.database import sql
-from models.model import Movie, Actor, Genre, Director, Review, Summary, Keyword
+from models.model import Movie, Actor, Genre, Director, Review, Keyword, User
 
 from datetime import datetime
 
@@ -84,7 +86,6 @@ def get_movie_data_by_imdb_id(imdbid: str):
         joinedload(Movie.directors),
         joinedload(Movie.genres),
         joinedload(Movie.reviews),
-        joinedload(Movie.summary),
         joinedload(Movie.keywords)
     ).filter(Movie.imdbID == imdbid).one()
 
@@ -138,13 +139,9 @@ def does_keyword_exist(kw):
     return sql.query(Keyword).filter(Keyword.word == kw).first()
 
 
-def insert_reviews_summary(imdb_id, objs, keywords, summary_text):
+def insert_reviews_keywords(imdb_id, objs, keywords):
     movie = sql.query(Movie).filter(Movie.imdbID == imdb_id).first()
-
-    summary = Summary(contentClean=summary_text)
-    sql.add(summary)
-    movie.summary = summary
-
+    
     for k in keywords:
         kw = does_keyword_exist(k)
         if not kw:
@@ -168,3 +165,24 @@ def insert_reviews_summary(imdb_id, objs, keywords, summary_text):
         sql.add(review)
         movie.reviews.append(review)
     sql.commit()
+    
+    
+async def add_movie_to_liked(user: int, movie: str):
+  is_liked = sql.query(like_movie).filter_by(userID=user, movieID=movie)
+  if is_liked is not None:
+    raise HTTPException(
+      status_code=status.HTTP_409_CONFLICT,
+      detail="Movie is already liked.",
+    )
+  
+  movie = sql.query(Movie).filter_by(imdbID=movie).first()
+  user = sql.query(User).filter_by(id=user).first()
+  if not user or not movie:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail="Movie or user not found."
+    )
+  
+  movie.users.add(user)
+  user.movies.add(movie)
+  sql.commit()

@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -19,8 +20,17 @@ def get_password():
     return get_settings().db_prod
 
 
-DATABASE_URL = f"mysql+pymysql://rokas:{get_password()}@localhost:3306/movies"
-engine = create_engine(DATABASE_URL, echo=False)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-sql = SessionLocal()
+url = URL.create(
+  drivername="mysql+pymysql",
+  username="rokas",
+  password=get_password(),
+  host="localhost",
+  database="movies",
+  port=3306
+)
+
+engine = create_engine(url)
+Session = sessionmaker(bind=engine)
+sql = Session()
+
 Base = declarative_base()

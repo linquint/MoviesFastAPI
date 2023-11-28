@@ -1,10 +1,16 @@
 import http.client
 import json
 
-from services.db import get_movie_by_imdb_id, insert_movie, get_reviews_by_imdb_id, insert_reviews_summary, \
+from fastapi import HTTPException, status
+from main import like_movie
+from models.model import Movie, User
+
+from services.db import get_movie_by_imdb_id, insert_movie, get_reviews_by_imdb_id, insert_reviews_keywords, \
     get_movie_data_by_imdb_id
-from services.extractor import retrieve_keywords, retrieve_summary
+from services.db import add_movie_to_liked as db_liked_movie
+from services.extractor import retrieve_keywords
 from services.scraper import scrape
+from models.database import sql
 
 headersDOJO = {
     'X-RapidAPI-Key': "3c28855955msh03796e646142a63p14bc99jsne913e6e6b778",
@@ -40,8 +46,7 @@ async def movie_reviews(imdb_id, retry=0):
                 return None
         else:
             keywords = retrieve_keywords(reviews_list)
-            summary = retrieve_summary(reviews_list)
-            insert_reviews_summary(imdb_id, objs, keywords, summary)
+            insert_reviews_keywords(imdb_id, objs, keywords)
     return get_movie_data_by_imdb_id(imdb_id)
     
 
@@ -52,3 +57,7 @@ async def get_top_movies():
     data = res.read()
     conn.close()
     return data
+
+
+async def add_movie_to_liked(user: int, movie: str):
+  db_liked_movie(user, movie)

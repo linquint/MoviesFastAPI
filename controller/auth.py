@@ -3,12 +3,13 @@ import logging
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 import jwt
+from interfaces.auth import AuthData
 from models.database import sql
 from models.model import User
 from datetime import datetime, timedelta
 
 
-SECRET_KEY = "notsosecretkey"
+SECRET_KEY = "1daf55137198005e896863a8951e5cc57bee1686ee0a34ae697e4ede1c5e8734"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
@@ -89,13 +90,13 @@ def authenticate_user(username: str, password: str):
     raise internal_error
 
 
-def verify_user_auth(token: str = Depends(oauth2_scheme)):
+def verify_user_auth(token: str = Depends(oauth2_scheme)) -> AuthData:
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256",])
     username: str = payload.get("user")
     if username is None:
       raise credentials_exception
-    return username
+    return payload
   except jwt.DecodeError:
     logging.error(f"Exception raised while decoding JWT.")
     raise internal_error

@@ -10,39 +10,37 @@ import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 import config
-from controller.auth import add_user, authenticate_user, get_password_hash, is_valid_username
+from controller.auth import add_user, authenticate_user, get_password_hash, is_valid_username, verify_user_auth
 from controller.home import movie_search, landing_keywords
-from controller.movies import movie_details, movie_reviews, get_top_movies
-from interfaces.auth import LoginReq
+from controller.movies import movie_details, movie_reviews, get_top_movies, add_movie_to_liked
+from interfaces.auth import AuthData, LoginReq
 from models.database import engine
 from models.model import metadata_obj
 import nltk
 
-from services.db import get_random_movies, get_random_keywords, get_keywords_ilike, get_movies_by_keywords, \
-    get_movie_by_imdb_id
+from services.db import add_movie_to_liked, get_random_movies, get_random_keywords, get_keywords_ilike, get_movies_by_keywords
 from static.vectors import init_vectors
 from static.words import init_word_lists
 
 sentry_sdk.init(
-    dsn="https://c32658a30102994242ba8b2ce119e541@o1136798.ingest.sentry.io/4506101713731584",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
-    integrations=[
-      LoggingIntegration(
-        level=logging.INFO,
-        event_level=logging.ERROR
-      )
-    ]
+  dsn="https://c32658a30102994242ba8b2ce119e541@o1136798.ingest.sentry.io/4506101713731584",
+  # Set traces_sample_rate to 1.0 to capture 100%
+  # of transactions for performance monitoring.
+  traces_sample_rate=1.0,
+  # Set profiles_sample_rate to 1.0 to profile 100%
+  # of sampled transactions.
+  # We recommend adjusting this value in production.
+  profiles_sample_rate=1.0,
+  integrations=[
+    LoggingIntegration(
+      level=logging.INFO,
+      event_level=logging.ERROR
+    )
+  ]
 )
 
 app = FastAPI()
 
-SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 
 origins = [
@@ -109,6 +107,12 @@ async def search_movie(q: str = Query(None), p: int = Query(1)):
     if data:
         return {"q": q, "page": p, "totalResults": data["count"], "response": json.loads(data["search"])}
     return {"response": [], "page": 0, "totalResults": 0}
+
+
+@app.get("/api/movie/{imdb_id}/like")
+async def like_movie(imdb_id: str, token: AuthData = Depends(verify_user_auth)):
+  add_movie_to_liked(token.id, imdb_id)
+  return {"response": "Movie added to liked"}
 
 
 @app.get("/api/movie/{imdb_id}")
