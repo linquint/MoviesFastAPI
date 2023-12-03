@@ -1,0 +1,94 @@
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = "5"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model keywords {
+  id            BigInt          @id @default(autoincrement())
+  word          String?         @unique(map: "word") @db.VarChar(255)
+  movie_keyword movie_keyword[]
+
+  @@index([id], map: "ix_keywords_id")
+}
+
+model liked_movie {
+  movieID Int
+  userID  Int    @db.UnsignedInt
+  movies  movies @relation(fields: [movieID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "liked_movie_ibfk_1")
+  users   users  @relation(fields: [userID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "liked_movie_ibfk_2")
+
+  @@id([movieID, userID])
+  @@index([userID], map: "userID")
+}
+
+model movie_keyword {
+  movieID   Int
+  keywordID BigInt
+  movies    movies   @relation(fields: [movieID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_keyword_ibfk_1")
+  keywords  keywords @relation(fields: [keywordID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_keyword_ibfk_2")
+
+  @@id([movieID, keywordID])
+  @@index([keywordID], map: "keywordID")
+}
+
+model movie_review {
+  movieID  Int
+  reviewID Int
+  movies   movies  @relation(fields: [movieID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_review_ibfk_1")
+  reviews  reviews @relation(fields: [reviewID], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_review_ibfk_2")
+
+  @@id([movieID, reviewID])
+  @@index([reviewID], map: "reviewID")
+}
+
+model movies {
+  id            Int             @id @default(autoincrement())
+  title         String?         @db.VarChar(255)
+  poster        String?         @db.VarChar(255)
+  releaseYear   Int?
+  runtime       Int?
+  plot          String?         @db.Text
+  awards        String?         @db.VarChar(255)
+  ratingIMDB    Float?          @db.Float
+  imdbVotes     Int?
+  imdbID        String?         @db.VarChar(255)
+  type          String?         @db.VarChar(255)
+  addedOn       DateTime?       @db.DateTime(0)
+  actors        String?         @db.VarChar(500)
+  directors     String?         @db.VarChar(500)
+  genres        String?         @db.VarChar(500)
+  liked_movie   liked_movie[]
+  movie_keyword movie_keyword[]
+  movie_review  movie_review[]
+
+  @@index([id], map: "ix_movies_id")
+}
+
+model reviews {
+  id           Int            @id @default(autoincrement())
+  imdbID       String?        @db.VarChar(255)
+  author       String?        @db.VarChar(255)
+  rating       Int?
+  helpfulness  Float?         @db.Float
+  upvotes      Int?
+  downvotes    Int?
+  title        String?        @db.VarChar(255)
+  content      String?        @db.Text
+  spoilers     Boolean?
+  submittedOn  DateTime?      @db.DateTime(0)
+  movie_review movie_review[]
+
+  @@index([id], map: "ix_reviews_id")
+}
+
+model users {
+  id          Int           @id @default(autoincrement()) @db.UnsignedInt
+  username    String        @unique(map: "username") @db.VarChar(32)
+  password    String        @db.VarChar(256)
+  liked_movie liked_movie[]
+}

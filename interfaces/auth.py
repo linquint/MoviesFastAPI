@@ -1,12 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class LoginReq(BaseModel):
-  username: str
-  password: str
-  
-  
-class AuthData(BaseModel):
+class RegisterReq(BaseModel):
+  username: str = Field(..., min_length=4, max_length=32)
+  password: str = Field(..., min_length=6, max_length=48)
+
+
+class User(BaseModel):
   id: int
-  sub: str
-  exp: str
+  username: str

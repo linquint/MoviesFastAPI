@@ -1,32 +1,43 @@
-import http.client
-import json
+from fastapi import APIRouter
 
-from services.db import get_random_keywords, get_top_keywords
-
-
-# Homepage data
+from db.prisma import prisma as db
 
 
-async def movie_search(query, page):
-    conn = http.client.HTTPConnection("omdbapi.com")
-    url = f"/?apikey=d49b3253&type=movie&plot=full&s={query}&page={page}"
-    conn.request("GET", url)
-    res_data = conn.getresponse().read()
-    conn.close()
-    results = json.loads(res_data.decode("utf-8"))
-    if "Search" in results:
-        search_results = results["Search"]
-        return {"count": int(results["totalResults"]), "search": json.dumps([{
-            "title": item["Title"],
-            "releaseYear": item["Year"],
-            "imdbID": item["imdbID"],
-            "type": item["Type"],
-            "poster": item["Poster"]
-        } for item in search_results])}
-    return False
+router = APIRouter(
+  prefix="/api",
+  tags=["home"],
+)
 
 
-def landing_keywords(count=16):
-    kw_rand = get_random_keywords(count)
-    kw_top = get_top_keywords()
-    return {"random": kw_rand, "top": json.loads(kw_top)}
+@router.get("/home")
+async def route_home():
+  keywords_top = await db.query_raw(
+    '''
+    SELECT COUNT(MKW.keywordID) total, KW.word word
+    FROM movie_keyword MKW
+    INNER JOIN keywords KW ON KW.id = MKW.keywordID
+    GROUP BY word
+    ORDER BY total DESC
+    LIMIT 20;
+    '''
+  )
+  
+  keywords_random = await db.query_raw(
+    '''
+    SELECT id, word
+    FROM keywords
+    ORDER BY RAND()
+    LIMIT 20;
+    '''
+  )
+  
+  movies_random = await db.query_raw(
+    '''
+    SELECT *
+    FROM movies
+    WHERE title IS NOT NULL
+    ORDER BY RAND()
+    LIMIT 24;
+    '''
+  )
+  return { "top": keywords_top, "random": keywords_random, "movies": movies_random }
