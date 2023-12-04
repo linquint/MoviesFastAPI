@@ -94,6 +94,7 @@ async def init_db():
   logging.info("Initializing NLTK")
   nltk.download('punkt')
   nltk.download('stopwords')
+  nltk.download('averaged_perceptron_tagger')
 
   # print("Initializing Top movies")
   # movies_res = await get_top_movies()

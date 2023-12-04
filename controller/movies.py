@@ -130,10 +130,10 @@ async def route_get_movie(
             "keywords": {
               "connectOrCreate": {
                 "where": {
-                  "word": keyword[0]
+                  "word": keyword
                 },
                 "create": {
-                  "word": keyword[0]
+                  "word": keyword
                 }
               }
             }

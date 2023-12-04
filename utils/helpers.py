@@ -1,14 +1,18 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
 import json
+import math
 import re
 import jwt
 from passlib.context import CryptContext
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from bs4 import BeautifulSoup
 import requests
 import yake
 import config
+import nltk
+from static.words import stopwords, adjectives
 
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -17,6 +21,7 @@ password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30
 ALGORITHM = "HS256"
+PUNCTUATION = """!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
 
 
 @lru_cache()
@@ -111,24 +116,59 @@ async def scrape(title_id):
   return json.dumps(reviews)
 
 
+# def retrieve_keywords(reviews):
+#   # valid_pos = ["JJ", "JJS", "RB", "PRP", "RBS", "VBG", "VB"]
+#   invalid_pos = ['DT', 'VBZ', 'CD', 'POS', 'CC', 'PRP', 'IN', '.', 'PRP$', ',', 'NNP', 'NNS']
+#   reviews_as_text = " ".join([review["content"] for review in reviews])
+#   max_ngram_size = 3
+#   deduplication_threshold = 0.9
+#   deduplication_algorithm = 'seqm'
+#   window_size = 2
+#   keyword_count = 100
+  
+#   keyword_extractor = yake.KeywordExtractor(
+#     lan="en",
+#     n=max_ngram_size,
+#     dedupLim=deduplication_threshold,
+#     dedupFunc=deduplication_algorithm,
+#     windowsSize=window_size,
+#     top=keyword_count,
+#   )
+  
+#   keywords = keyword_extractor.extract_keywords(reviews_as_text)
+#   valid_keywords = []
+#   for keyword in keywords:
+#     tokenized_keyword = nltk.word_tokenize(keyword[0])
+#     tagged_keyword = nltk.pos_tag(tokenized_keyword)
+#     if any([tag[1] in invalid_pos for tag in tagged_keyword]) is False:
+#       valid_keywords.append(keyword)
+  
+#   # tokenized_keywords = nltk.word_tokenize(" ".join([keyword[0] for keyword in keywords]))
+#   # tagged_keywords = nltk.pos_tag(tokenized_keywords)
+#   print(valid_keywords)
+#   return keywords
+
 def retrieve_keywords(reviews):
-  reviews_as_text = " ".join([review["content"] for review in reviews])
-  max_ngram_size = 3
-  deduplication_threshold = 0.8
-  deduplication_algorithm = 'seqm'
-  window_size = 1
-  keyword_count = 50
+  valid_pos = ["JJ", "JJS", "RBS"]
+  reviews_text: list[str] = [review["content"] for review in reviews]
+  tfidf_vectorizer = TfidfVectorizer(stop_words=stopwords)
+  tfidf_matrix = tfidf_vectorizer.fit_transform(reviews_text)
+  feature_names = tfidf_vectorizer.get_feature_names_out()
   
-  keyword_extractor = yake.KeywordExtractor(
-    lan="en",
-    n=max_ngram_size,
-    dedupLim=deduplication_threshold,
-    dedupFunc=deduplication_algorithm,
-    windowsSize=window_size,
-    top=keyword_count,
-  )
-  
-  return keyword_extractor.extract_keywords(reviews_as_text)
+  keywords_combined = {}
+  for i in range(len(reviews_text)):
+    sorted_indices = tfidf_matrix[i].toarray().argsort()[0, ::-1]
+    for j in range(25):
+      keyword_index = sorted_indices[j]
+      keyword = feature_names[keyword_index]
+      tfidf_score = tfidf_matrix[i, keyword_index]
+      if keyword in keywords_combined:
+        keywords_combined[keyword].append(tfidf_score)
+      else:
+        keywords_combined[keyword] = [tfidf_score]
+  keywords_scores = [(keyword, math.pow(len(scores) * math.exp(1), sum(scores))) for keyword, scores in keywords_combined.items()]
+  keywords_scores.sort(key=lambda x: x[1], reverse=True)
+  return [keyword[0] for keyword in keywords_scores if keyword[0] in adjectives]
 
 
 def get_hashed_password(password: str) -> str:
