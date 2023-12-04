@@ -149,7 +149,6 @@ async def scrape(title_id):
 #   return keywords
 
 def retrieve_keywords(reviews):
-  valid_pos = ["JJ", "JJS", "RBS"]
   reviews_text: list[str] = [review["content"] for review in reviews]
   tfidf_vectorizer = TfidfVectorizer(stop_words=stopwords)
   tfidf_matrix = tfidf_vectorizer.fit_transform(reviews_text)
