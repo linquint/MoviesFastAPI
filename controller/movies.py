@@ -10,6 +10,7 @@ from interfaces.movies import SearchRes
 from db.prisma import prisma as db
 from utils import helpers
 from utils.deps import get_current_user
+from utils.vectors import keyword_avg
 
 headersDOJO = {
     'X-RapidAPI-Key': "3c28855955msh03796e646142a63p14bc99jsne913e6e6b778",
@@ -85,6 +86,24 @@ async def route_get_movie(
     reviews_json = json.loads(await helpers.scrape(imdb_id))
     reviews = [review for review in reviews_json if review['content'] != '']
     keywords = helpers.retrieve_keywords(reviews)
+    
+    # avg_vector = keyword_avg(keywords)
+    # print(avg_vector)
+    
+    madagascar2 = await db.query_raw(
+      """
+      SELECT k.word word
+      FROM movies m
+      INNER JOIN movie_keyword mk ON mk.movieID = m.id
+      INNER JOIN keywords k ON mk.keywordID = k.id
+      WHERE m.imdbID = 'tt0111257'
+      """
+    )
+    
+    list1 = [item['word'].lower() for item in madagascar2]
+    
+    # Sulyginti setu ilgius
+    print(helpers.jaccard_similarity(list1, [keyword.lower() for keyword in keywords]))
     
     # Prepare movie data
     movie_obj = json.loads(res_data.decode('utf-8'))

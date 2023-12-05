@@ -116,58 +116,61 @@ async def scrape(title_id):
   return json.dumps(reviews)
 
 
-# def retrieve_keywords(reviews):
-#   # valid_pos = ["JJ", "JJS", "RB", "PRP", "RBS", "VBG", "VB"]
-#   invalid_pos = ['DT', 'VBZ', 'CD', 'POS', 'CC', 'PRP', 'IN', '.', 'PRP$', ',', 'NNP', 'NNS']
-#   reviews_as_text = " ".join([review["content"] for review in reviews])
-#   max_ngram_size = 3
-#   deduplication_threshold = 0.9
-#   deduplication_algorithm = 'seqm'
-#   window_size = 2
-#   keyword_count = 100
-  
-#   keyword_extractor = yake.KeywordExtractor(
-#     lan="en",
-#     n=max_ngram_size,
-#     dedupLim=deduplication_threshold,
-#     dedupFunc=deduplication_algorithm,
-#     windowsSize=window_size,
-#     top=keyword_count,
-#   )
-  
-#   keywords = keyword_extractor.extract_keywords(reviews_as_text)
-#   valid_keywords = []
-#   for keyword in keywords:
-#     tokenized_keyword = nltk.word_tokenize(keyword[0])
-#     tagged_keyword = nltk.pos_tag(tokenized_keyword)
-#     if any([tag[1] in invalid_pos for tag in tagged_keyword]) is False:
-#       valid_keywords.append(keyword)
-  
-#   # tokenized_keywords = nltk.word_tokenize(" ".join([keyword[0] for keyword in keywords]))
-#   # tagged_keywords = nltk.pos_tag(tokenized_keywords)
-#   print(valid_keywords)
-#   return keywords
-
 def retrieve_keywords(reviews):
-  reviews_text: list[str] = [review["content"] for review in reviews]
-  tfidf_vectorizer = TfidfVectorizer(stop_words=stopwords)
-  tfidf_matrix = tfidf_vectorizer.fit_transform(reviews_text)
-  feature_names = tfidf_vectorizer.get_feature_names_out()
+  valid_pos = ["JJ", "JJS", "RB", "NN", "RBS", "VBG", "VB"]
+  # invalid_pos = ['DT', 'VBZ', 'CD', 'POS', 'CC', 'PRP', 'IN', '.', 'PRP$', ',', 'NNP', 'NNS']
+  reviews_as_text = " ".join([review["content"] for review in reviews])
+  max_ngram_size = 1
+  deduplication_threshold = 0.9
+  deduplication_algorithm = 'seqm'
+  window_size = 1
+  keyword_count = 150
   
-  keywords_combined = {}
-  for i in range(len(reviews_text)):
-    sorted_indices = tfidf_matrix[i].toarray().argsort()[0, ::-1]
-    for j in range(25):
-      keyword_index = sorted_indices[j]
-      keyword = feature_names[keyword_index]
-      tfidf_score = tfidf_matrix[i, keyword_index]
-      if keyword in keywords_combined:
-        keywords_combined[keyword].append(tfidf_score)
-      else:
-        keywords_combined[keyword] = [tfidf_score]
-  keywords_scores = [(keyword, math.pow(len(scores) * math.exp(1), sum(scores))) for keyword, scores in keywords_combined.items()]
-  keywords_scores.sort(key=lambda x: x[1], reverse=True)
-  return [keyword[0] for keyword in keywords_scores if keyword[0] in adjectives]
+  keyword_extractor = yake.KeywordExtractor(
+    lan="en",
+    n=max_ngram_size,
+    dedupLim=deduplication_threshold,
+    dedupFunc=deduplication_algorithm,
+    windowsSize=window_size,
+    top=keyword_count,
+  )
+  
+  keywords = keyword_extractor.extract_keywords(reviews_as_text)
+  valid_keywords = []
+  tokenized_keywords = nltk.word_tokenize(" ".join([keyword[0] for keyword in keywords]))
+  tagged_keyword = nltk.pos_tag(tokenized_keywords)
+  valid_keywords = [keyword[0] for keyword in tagged_keyword if keyword[1] in valid_pos]
+  
+  # tokenized_keywords = nltk.word_tokenize(" ".join([keyword[0] for keyword in keywords]))
+  # tagged_keywords = nltk.pos_tag(tokenized_keywords)
+  print(valid_keywords)
+  return valid_keywords
+
+# def retrieve_keywords(reviews) -> list[str]:
+#   reviews_text: list[str] = [review["content"] for review in reviews]
+#   tfidf_vectorizer = TfidfVectorizer(stop_words=stopwords)
+#   tfidf_matrix = tfidf_vectorizer.fit_transform(reviews_text)
+#   feature_names = tfidf_vectorizer.get_feature_names_out()
+  
+#   keywords_combined = {}
+#   for i in range(len(reviews_text)):
+#     sorted_indices = tfidf_matrix[i].toarray().argsort()[0, ::-1]
+#     for j in range(25):
+#       keyword_index = sorted_indices[j]
+#       keyword = feature_names[keyword_index]
+#       tfidf_score = tfidf_matrix[i, keyword_index]
+#       if keyword in keywords_combined:
+#         keywords_combined[keyword].append(tfidf_score)
+#       else:
+#         keywords_combined[keyword] = [tfidf_score]
+#   keywords_scores = [(keyword, math.pow(len(scores) * math.exp(1), sum(scores))) for keyword, scores in keywords_combined.items()]
+#   keywords_scores.sort(key=lambda x: x[1], reverse=True)
+#   return [keyword[0] for keyword in keywords_scores if keyword[0] in adjectives]
+
+def jaccard_similarity(list1, list2):
+  intersection = len(list(set(list1).intersection(list2)))
+  union = (len(list1) + len(list2)) - intersection
+  return intersection / union if union != 0 else 0
 
 
 def get_hashed_password(password: str) -> str:

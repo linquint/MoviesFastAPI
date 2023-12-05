@@ -25,7 +25,7 @@ from db.prisma import prisma as db
 import nltk
 
 # from services.db import add_movie_to_liked, get_random_movies, get_random_keywords, get_keywords_ilike, get_movies_by_keywords
-from static.vectors import init_vectors
+from utils.vectors import init_vectors
 from static.words import init_word_lists
 
 sentry_sdk.init(
