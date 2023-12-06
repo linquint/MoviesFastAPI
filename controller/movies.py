@@ -87,24 +87,6 @@ async def route_get_movie(
     reviews = [review for review in reviews_json if review['content'] != '']
     keywords = helpers.retrieve_keywords(reviews)
     
-    # avg_vector = keyword_avg(keywords)
-    # print(avg_vector)
-    
-    madagascar2 = await db.query_raw(
-      """
-      SELECT k.word word
-      FROM movies m
-      INNER JOIN movie_keyword mk ON mk.movieID = m.id
-      INNER JOIN keywords k ON mk.keywordID = k.id
-      WHERE m.imdbID = 'tt0111257'
-      """
-    )
-    
-    list1 = [item['word'].lower() for item in madagascar2]
-    
-    # Sulyginti setu ilgius
-    print(helpers.jaccard_similarity(list1, [keyword.lower() for keyword in keywords]))
-    
     # Prepare movie data
     movie_obj = json.loads(res_data.decode('utf-8'))
     

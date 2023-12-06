@@ -1,30 +1,17 @@
-import json
 import logging
-import re
 from functools import lru_cache
-from typing import Annotated, Union
-
-from fastapi import APIRouter, FastAPI, HTTPException, Path, Query, status, Depends
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
-
 import config
+import nltk
+
 from controller.movies import router as movies_router
 from controller.home import router as home_router
 from controller.keywords import router as keywords_router
-from controller.auth import router as auth_router
-# from controller.auth import add_user, authenticate_user, get_password_hash, is_valid_username, verify_user_auth
-# from controller.home import landing_keywords
+from controller.user import router as user_router
 from db.prisma import prisma as db
-# from controller.movies import movie_details, movie_reviews, get_top_movies, add_movie_to_liked
-# from interfaces.auth import AuthData, LoginReq
-# from models.database import engine
-# from models.model import metadata_obj
-import nltk
-
-# from services.db import add_movie_to_liked, get_random_movies, get_random_keywords, get_keywords_ilike, get_movies_by_keywords
 from utils.vectors import init_vectors
 from static.words import init_word_lists
 
@@ -74,7 +61,7 @@ app.include_router(router=router)
 app.include_router(router=home_router)
 app.include_router(router=movies_router)
 app.include_router(router=keywords_router)
-app.include_router(router=auth_router)
+app.include_router(router=user_router)
 
 
 @lru_cache()

@@ -26,3 +26,8 @@ internal_error = HTTPException(
   status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
   detail="Task failed successfully",
 )
+
+not_enough_liked_movies = HTTPException(
+  status_code=status.HTTP_400_BAD_REQUEST,
+  detail="You must have at least 5 liked movies to get recommendations."
+)
