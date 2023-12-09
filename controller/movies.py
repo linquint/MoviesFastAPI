@@ -52,13 +52,13 @@ async def route_search_movie(
       "query": query,
       "page": page,
       "count": int(omdb_res["totalResults"]),
-      "search": json.dumps([{
+      "search": [{
         "title": item["Title"],
         "releaseYear": item["Year"],
         "imdbID": item["imdbID"],
         "type": item["Type"],
-        "poster": item["Poster"]
-      } for item in search_results])
+        "poster": item["Poster"],
+      } for item in search_results]
     }
   # No results found
   raise HTTPException(

@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from interfaces.auth import RegisterReq
-from utils.deps import get_current_user
+from utils.deps import get_current_user, optional_auth
 import utils.err as err
 import utils.helpers as helpers
 from db.prisma import prisma as db
@@ -18,6 +18,8 @@ router = APIRouter(
 @router.post("/register", response_model=dict)
 async def route_register(data: RegisterReq):
   try:
+    if data.password.__eq__(data.password_verify):
+      raise err.passwords_dont_match
     user = await db.users.find_unique(where={"username": data.username})
     if user:
       raise err.username_occupied
@@ -47,6 +49,15 @@ async def route_login(login_data: OAuth2PasswordRequestForm = Depends()):
   except Exception as e:
     logging.error(f"Exception raised while logging in user: {e}")
     raise err.internal_error
+  
+  
+@router.get("/likes")
+async def route_user_likes(user: Any = Depends(optional_auth)):
+  if not user:
+    return []
+  logging.info(f"Getting liked movies for user {user.id}")
+  movies = await db.liked_movie.find_many(where={"userID": user.id})
+  return movies
 
 
 @router.get("/recommendations")

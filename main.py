@@ -39,6 +39,7 @@ ORIGINS = [
   "http://localhost:5173",
   "https://linquint.dev",
   "http://192.168.1.237:5173",
+  "http://192.168.1.253:5173",
   "https://movies.linquint.dev",
   "http://localhost:3000",
 ]
@@ -59,8 +60,8 @@ app.add_middleware(
 )
 app.include_router(router=router)
 app.include_router(router=home_router)
-app.include_router(router=movies_router)
 app.include_router(router=keywords_router)
+app.include_router(router=movies_router)
 app.include_router(router=user_router)
 
 

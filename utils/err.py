@@ -31,3 +31,8 @@ not_enough_liked_movies = HTTPException(
   status_code=status.HTTP_400_BAD_REQUEST,
   detail="You must have at least 5 liked movies to get recommendations."
 )
+
+passwords_dont_match = HTTPException(
+  status_code=status.HTTP_400_BAD_REQUEST,
+  detail="Passwords must match."
+)
