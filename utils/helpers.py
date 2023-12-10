@@ -117,7 +117,8 @@ async def scrape(title_id):
 
 
 def retrieve_keywords(reviews):
-  valid_pos = ["JJ", "JJS", "RB", "NN", "RBS", "VBG", "VB"]
+  valid_pos = ["JJ", "JJS", "RB", "NN", "RBS", "VBG", "NNS"]
+  invalid_words = ["movie", "film", "films", "movies"]
   # invalid_pos = ['DT', 'VBZ', 'CD', 'POS', 'CC', 'PRP', 'IN', '.', 'PRP$', ',', 'NNP', 'NNS']
   reviews_as_text = " ".join([review["content"] for review in reviews])
   max_ngram_size = 1
@@ -139,33 +140,14 @@ def retrieve_keywords(reviews):
   valid_keywords = []
   tokenized_keywords = nltk.word_tokenize(" ".join([keyword[0] for keyword in keywords]))
   tagged_keyword = nltk.pos_tag(tokenized_keywords)
-  valid_keywords = [keyword[0] for keyword in tagged_keyword if keyword[1] in valid_pos]
+  valid_keywords = [keyword[0].lower() for keyword in tagged_keyword if keyword[1] in valid_pos]
+  valid_keywords = [keyword for keyword in valid_keywords if keyword not in invalid_words]
   
   # tokenized_keywords = nltk.word_tokenize(" ".join([keyword[0] for keyword in keywords]))
   # tagged_keywords = nltk.pos_tag(tokenized_keywords)
   print(valid_keywords)
   return valid_keywords
 
-# def retrieve_keywords(reviews) -> list[str]:
-#   reviews_text: list[str] = [review["content"] for review in reviews]
-#   tfidf_vectorizer = TfidfVectorizer(stop_words=stopwords)
-#   tfidf_matrix = tfidf_vectorizer.fit_transform(reviews_text)
-#   feature_names = tfidf_vectorizer.get_feature_names_out()
-  
-#   keywords_combined = {}
-#   for i in range(len(reviews_text)):
-#     sorted_indices = tfidf_matrix[i].toarray().argsort()[0, ::-1]
-#     for j in range(25):
-#       keyword_index = sorted_indices[j]
-#       keyword = feature_names[keyword_index]
-#       tfidf_score = tfidf_matrix[i, keyword_index]
-#       if keyword in keywords_combined:
-#         keywords_combined[keyword].append(tfidf_score)
-#       else:
-#         keywords_combined[keyword] = [tfidf_score]
-#   keywords_scores = [(keyword, math.pow(len(scores) * math.exp(1), sum(scores))) for keyword, scores in keywords_combined.items()]
-#   keywords_scores.sort(key=lambda x: x[1], reverse=True)
-#   return [keyword[0] for keyword in keywords_scores if keyword[0] in adjectives]
 
 def jaccard_similarity(list1, list2):
   intersection = len(list(set(list1).intersection(list2)))

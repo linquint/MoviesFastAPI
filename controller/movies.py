@@ -40,7 +40,7 @@ async def route_search_movie(
     )
   # Get search results from OMDB API
   conn = http.client.HTTPConnection("omdbapi.com")
-  url = f"/?apikey=d49b3253&type=movie&plot=full&s={query}&page={page}"
+  url = f"/?apikey=d49b3253&type=movie&plot=full&s={query}&page={page}".replace(" ", "%20")
   conn.request("GET", url)
   conn_res = conn.getresponse().read()
   conn.close()
@@ -201,7 +201,8 @@ async def route_like_movie(
       }
     }
   })
-  return {"response": "Movie added to liked"}
+  movies = await db.liked_movie.find_many(where={"userID": user.id}, include={"movies": True})
+  return {"likes": [movie.movies.imdbID for movie in movies]}
 
 
 @router.get("/movies/dislike/{imdb_id}")
@@ -217,4 +218,5 @@ async def route_dislike_movie(
       "userID": user.id
     }
   })
-  return {"response": "Movie removed from liked"}
+  movies = await db.liked_movie.find_many(where={"userID": user.id}, include={"movies": True})
+  return {"likes": [movie.movies.imdbID for movie in movies]}
