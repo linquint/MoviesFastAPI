@@ -1,18 +1,15 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
 import json
-import math
 import re
 import jwt
 from passlib.context import CryptContext
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 from bs4 import BeautifulSoup
 import requests
 import yake
 import config
 import nltk
-from static.words import stopwords, adjectives
 
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

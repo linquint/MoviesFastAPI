@@ -1,6 +1,6 @@
 import logging
 from typing import Any
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 import jwt
 from interfaces.auth import RefreshReq, RegisterReq, LoginResponse

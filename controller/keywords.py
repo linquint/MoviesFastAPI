@@ -23,4 +23,4 @@ async def route_keywords_autocomplete(
       }
     }
   )
-  return keywords
+  return [{ "id": keyword.id, "word": keyword.word } for keyword in keywords]

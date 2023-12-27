@@ -10,7 +10,6 @@ from interfaces.movies import SearchRes
 from db.prisma import prisma as db
 from utils import helpers
 from utils.deps import get_current_user
-from utils.vectors import keyword_avg
 
 headersDOJO = {
     'X-RapidAPI-Key': "3c28855955msh03796e646142a63p14bc99jsne913e6e6b778",
@@ -156,7 +155,7 @@ async def route_movie_by_keywords(
   page: Annotated[int, Path(title="Page number")],
   keywords: Annotated[list[str], Query(title="Keywords", min_length=1)],
 ):
-  return await db.movies.find_many(
+  movies = await db.movies.find_many(
     where={
       "movie_keyword": {
         "some": {
@@ -171,9 +170,26 @@ async def route_movie_by_keywords(
     skip=(page - 1) * 12,
     take=12
   )
+  return [{
+    "id": movie.id,
+		"title": movie.title,
+		"poster": movie.poster,
+		"releaseYear": movie.releaseYear,
+		"runtime": movie.runtime,
+		"plot": movie.plot,
+		"awards": movie.awards,
+		"ratingIMDB": movie.ratingIMDB,
+		"imdbVotes": movie.imdbVotes,
+		"imdbID": movie.imdbID,
+		"type": movie.type,
+		"addedOn": movie.addedOn,
+		"actors": movie.actors,
+		"directors": movie.directors,
+		"genres": movie.genres,
+  } for movie in movies]
 
 
-@router.get("/movies/like/{imdb_id}")
+@router.post("/movies/like/{imdb_id}")
 async def route_like_movie(
   imdb_id: Annotated[str, Path(title="IMDB ID")],
   user: Any = Depends(get_current_user)
@@ -205,7 +221,7 @@ async def route_like_movie(
   return {"likes": [movie.movies.imdbID for movie in movies]}
 
 
-@router.get("/movies/dislike/{imdb_id}")
+@router.delete("/movies/dislike/{imdb_id}")
 async def route_dislike_movie(
   imdb_id: Annotated[str, Path(title="IMDB ID")],
   user: Any = Depends(get_current_user)

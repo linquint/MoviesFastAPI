@@ -12,8 +12,6 @@ from controller.home import router as home_router
 from controller.keywords import router as keywords_router
 from controller.user import router as user_router
 from db.prisma import prisma as db
-from utils.vectors import init_vectors
-from static.words import init_word_lists
 
 sentry_sdk.init(
   dsn="https://c32658a30102994242ba8b2ce119e541@o1136798.ingest.sentry.io/4506101713731584",
@@ -75,26 +73,10 @@ async def init_db():
   logging.info("Initializing database")
   await db.connect()
 
-  logging.info("Initializing word vector data")
-  init_vectors()
-  init_word_lists()
-
   logging.info("Initializing NLTK")
   nltk.download('punkt')
   nltk.download('stopwords')
   nltk.download('averaged_perceptron_tagger')
-
-  # print("Initializing Top movies")
-  # movies_res = await get_top_movies()
-  # movies = json.loads(movies_res.decode("utf-8"))['results']
-  # for movie in movies:
-  #     imdb = re.findall("tt\d{7,8}", movie['url'])[0]
-  #     if get_movie_by_imdb_id(imdb) is None:
-  #         print(f"Adding {imdb}")
-  #         await get_movie(imdb)
-  #         await movie_reviews(imdb)
-  # print("Initializing currently Most Popular movies")
-  # IMDB chart ID: moviemeter
   logging.info("Initialization complete")
   
   
